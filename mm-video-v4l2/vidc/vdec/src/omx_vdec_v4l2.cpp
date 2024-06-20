@@ -377,6 +377,9 @@ void* message_thread_dec(void *input)
         tv.tv_usec = 0;
 
         FD_ZERO(&readFds);
+        if (omx->m_pipe_in > FD_SETSIZE) {
+           continue;
+        }
         FD_SET(omx->m_pipe_in, &readFds);
 
         res = select(omx->m_pipe_in + 1, &readFds, NULL, NULL, &tv);
@@ -2864,6 +2867,9 @@ OMX_ERRORTYPE omx_vdec::component_init(OMX_STRING role)
         } else {
             m_pipe_in = fds[0];
             m_pipe_out = fds[1];
+            if (m_pipe_in > FD_SETSIZE || m_pipe_out > FD_SETSIZE) {
+                eRet =  OMX_ErrorInsufficientResources;
+            }
             msg_thread_created = true;
             r = pthread_create(&msg_thread_id,0,message_thread_dec,this);
 
