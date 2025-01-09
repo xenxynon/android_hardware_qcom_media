@@ -5130,9 +5130,6 @@ bool omx_video::alloc_map_ion_memory(int size, venc_ion *ion_info, int flag)
                 (unsigned int)ion_info->alloc_data.len,
                 ion_info->alloc_data.flags);
     }
-#ifdef HYPERVISOR
-    ion_info->alloc_data.flags &= (~ION_FLAG_CACHED);
-#endif
 
     rc = ion_alloc_fd(ion_info->dev_fd, ion_info->alloc_data.len, 0,
                       ion_info->alloc_data.heap_id_mask,

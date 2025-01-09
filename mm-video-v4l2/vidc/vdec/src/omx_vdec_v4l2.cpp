@@ -52,9 +52,6 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <fcntl.h>
 #include <limits.h>
 #include <stdlib.h>
-#ifdef HYPERVISOR
-#include "hypv_intercept.h"
-#endif
 #include <media/hardware/HardwareAPI.h>
 #include <sys/eventfd.h>
 #include "PlatformConfig.h"
@@ -159,11 +156,6 @@ as 0. This disables sending metadata via gralloc handle.
 #define HDR10_SETMETADATA_ENABLE 0
 
 using namespace android;
-
-#ifdef HYPERVISOR
-#define ioctl(x, y, z) hypv_ioctl(x, y, z)
-#define poll(x, y, z)  hypv_poll(x, y, z)
-#endif
 
 static OMX_U32 maxSmoothStreamingWidth = 1920;
 static OMX_U32 maxSmoothStreamingHeight = 1088;
@@ -1051,11 +1043,7 @@ omx_vdec::~omx_vdec()
 
     unsubscribe_to_events(drv_ctx.video_driver_fd);
     close(m_poll_efd);
-#ifdef HYPERVISOR
-    hypv_close(drv_ctx.video_driver_fd);
-#else
     close(drv_ctx.video_driver_fd);
-#endif
     clear_hdr10plusinfo();
     pthread_mutex_destroy(&m_lock);
     pthread_mutex_destroy(&c_lock);
@@ -2375,11 +2363,7 @@ OMX_ERRORTYPE omx_vdec::component_init(OMX_STRING role)
         role = (OMX_STRING)"OMX.qcom.video.decoder.vp9";
     }
 
-#ifdef HYPERVISOR
-    drv_ctx.video_driver_fd = hypv_open(device_name, O_RDWR);
-#else
     drv_ctx.video_driver_fd = open(device_name, O_RDWR);
-#endif
 
     DEBUG_PRINT_INFO("component_init: %s : fd=%d", role, drv_ctx.video_driver_fd);
 
@@ -9931,9 +9915,6 @@ bool omx_vdec::alloc_map_ion_memory(OMX_U32 buffer_size, vdec_ion *ion_info, int
         return false;
     }
 
-#ifdef HYPERVISOR
-    flag = 0;
-#endif
     ion_info->alloc_data.flags = flag;
     ion_info->alloc_data.len = buffer_size;
 
